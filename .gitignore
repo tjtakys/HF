@@ -1,0 +1,12 @@
+data/
+
+*.log
+
+*.last
+*.pre
+
+Temp*
+
+proposal/
+
+IMAGING_WEIGHT*
