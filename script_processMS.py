@@ -11,15 +11,16 @@ mysteps = [
     # 0,         # mstransform to extract only G09.83808 and make ".target" and average on time
     # 1,         # concat 6 MSs to make "all.ms"
     # 2,         # baseline statistics
-    # 3          # imaging for looking the spectrum
-    # 4          # uvcontsub
-    # 5,         # imaging continuum and making mask
+    # 3,         # imaging for looking the spectrum
+    # 4,         # uvcontsub
+    5,         # imaging continuum and making mask
     # 6          # tclean for both continuum + line assuming to use imcontsub
     # 7,         # tclean for CO(10-9) / H2O(2_20-2_11) / HF(1-0)
     # 8,         # create moment maps
-    # 9          # imcontsub
-    # 10          # tclean for continuum-subtracted spectrum
-    11          # tclean for [OIII]88 and [NII]205 (Tadaki-san)
+    # 9,         # imcontsub
+    # 10,        # tclean for continuum-subtracted spectrum
+    # 11,        # tclean for [OIII]88 and [NII]205 (Tadaki-san)
+    # 12,        # create moment maps for [OIII]88 and [NII]205 (Tadaki-san)
 ]
 
 # common redshift
@@ -312,11 +313,6 @@ if thisstep in mysteps:
     imsize = 400  # imsize for tclean
     nsigma = 1.0  # noise threshold for tclean
 
-    # ---- continuumをimagingする。ここで作ったマスクはlineイメージングのときにも使う ----
-    vis = os.path.join(dir, f"all_tbin{tbin}s.ms") # 上でconcatしたMS
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.cont.rob_{robust}.sgm_{nsigma}")
-    # os.system(f"rm -r {imagename}*")
-
     # ---- mask param ----
     noisethreshold = 5.0     # default: 5.0
     sidelobethreshold = 2.0  # default: 2.0
@@ -343,7 +339,11 @@ if thisstep in mysteps:
     spw_T2 = f"{part3},{part4}"
 
     spw = f"{part1},{part2},{part3},{part4}"
-    # ---- 指定終わり ----
+
+    # ---- Tune1 + Tune2 ----
+    vis = os.path.join(dir, f"all_tbin{tbin}s.ms") # 上でconcatしたMS
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.cont.rob_{robust}.sgm_{nsigma}")
+    # os.system(f"rm -r {imagename}*")
 
     # tclean(
     #     vis=vis,
@@ -377,51 +377,74 @@ if thisstep in mysteps:
     #     dropdeg=True,
     #     overwrite=True
     # )
+    # exportfits(
+    #     imagename=imagename+".image",
+    #     fitsimage=imagename+".image.fits",
+    #     dropdeg=True,
+    #     overwrite=True
+    # )
+
     # maskもfitsにしておく
-    exportfits(
-        imagename=imagename+".mask",
-        fitsimage=imagename+".mask"+".fits",
-        dropdeg=True,
-        overwrite=True
-    )
-
-    # # Tune-2
-    # vis = os.path.join(dir, f"all_tbin{tbin}s.ms") # 上でconcatしたMS
-    # imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.cont.T2.rob_{robust}.sgm_{nsigma}")
-    # os.system(f"rm -rf {imagename}*")
-
-    # tclean(
-    #     vis=vis,
-    #     imagename=imagename,
-    #     imsize=imsize,
-    #     cell=cell, 
-    #     specmode="mfs",
-    #     spw=spw,  # 上で指定したspwを使う
-    #     outframe="bary",
-    #     deconvolver="multiscale", # mtmfsの方がいい？
-    #     scales=[0, 4, 12],
-    #     weighting="briggs",
-    #     robust=robust,
-    #     restoringbeam="common",
-    #     niter=10000000,
-    #     nsigma=nsigma,
-    #     usemask="auto-multithresh",
-    #     noisethreshold=noisethreshold,
-    #     sidelobethreshold=sidelobethreshold,
-    #     lownoisethreshold=lownoisethreshold,
-    #     minbeamfrac=minbeamfrac,
-    #     growiterations=growiterations,
-    #     negativethreshold=negativethreshold,
-    #     fastnoise=fastnoise,
-    #     pbcor=True
-    # )
-    
     # exportfits(
-    #     imagename=imagename+".image.pbcor",
-    #     fitsimage=imagename+".image.pbcor.fits",
+    #     imagename=imagename+".mask",
+    #     fitsimage=imagename+".mask"+".fits",
     #     dropdeg=True,
     #     overwrite=True
     # )
+
+
+    # ---- Tune1 or Tune2 ----
+    # ---- imaging param ----
+    robust = 2.0  # robust parameter for tclean
+    cell = "0.15arcsec"  
+    imsize = 400  # imsize for tclean
+    nsigma = 1.0  # noise threshold for tclean
+
+    # mask はTune1 + Tune2のcontinuumで作ったもの(robust=0.0)で固定
+    mask = os.path.join(dir_image, f"all_tbin{tbin}s.ms.cont.rob_{robust_mask}.sgm_{nsigma_mask}.mask")
+
+    for i in [1, 2]:
+        if i == 1:
+            spw = spw_T1
+        else:
+            spw = spw_T2
+
+        vis = os.path.join(dir, f"all_tbin{tbin}s.ms") # 上でconcatしたMS
+        imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.cont.T{i}.rob_{robust}.sgm_{nsigma}")
+        os.system(f"rm -r {imagename}*")
+
+        tclean(
+            vis=vis,
+            imagename=imagename,
+            imsize=imsize,
+            cell=cell, 
+            specmode="mfs",
+            spw=spw,  # 上で指定したspwを使う
+            outframe="bary",
+            deconvolver="multiscale", # mtmfsの方がいい？
+            scales=[0, 4, 12],
+            weighting="briggs",
+            robust=robust,
+            restoringbeam="common",
+            niter=10000000,
+            nsigma=nsigma,
+            usemask="user",
+            mask=mask,
+            pbcor=True
+        )
+        
+        exportfits(
+            imagename=imagename+".image.pbcor",
+            fitsimage=imagename+".image.pbcor.fits",
+            dropdeg=True,
+            overwrite=True
+        )
+        exportfits(
+            imagename=imagename+".image",
+            fitsimage=imagename+".image.fits",
+            dropdeg=True,
+            overwrite=True
+        )
 
 
 
@@ -437,7 +460,7 @@ if thisstep in mysteps:
     width = "25MHz"  # width for tclean
 
     vis = os.path.join(dir, f"all_tbin{tbin}s.ms") 
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.T1.rob{robust}.sgm_{nsigma}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.T1.rob_{robust}.sgm_{nsigma}")
     os.system(f"rm -rf {imagename}*")
 
     # ---- maskはcontinuumで作ったもの(robust=0.0)で固定 ----
@@ -472,7 +495,7 @@ if thisstep in mysteps:
 
 
     # Tune-2
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.T2.rob{robust}.sgm_{nsigma}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.T2.rob_{robust}.sgm_{nsigma}")
     os.system(f"rm -rf {imagename}*")
 
     tclean(
@@ -521,7 +544,7 @@ if thisstep in mysteps:
 
     # ---- input vis ----
     vis = os.path.join(dir, f"all_tbin{tbin}s.ms.contsub.T1")  # 上でuvcontsubしたMS
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T1.rob{robust}.sgm_{nsigma}.CO10-9.dv_{width.replace('km/s', '')}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T1.rob_{robust}.sgm_{nsigma}.CO10-9.dv_{width.replace('km/s', '')}")
     os.system(f"rm -rf {imagename}*")
 
     # ---- maskはcontinuumで作ったもの(robust=0.0)で固定 ----
@@ -553,6 +576,18 @@ if thisstep in mysteps:
     exportfits(
         imagename=imagename+".image.pbcor",
         fitsimage=imagename+".image.pbcor.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    exportfits(
+        imagename=imagename+".image",
+        fitsimage=imagename+".image.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    exportfits(
+        imagename=imagename+".pb",
+        fitsimage=imagename+".pb.fits",
         dropdeg=True,
         overwrite=True
     )
@@ -565,7 +600,7 @@ if thisstep in mysteps:
 
     # ---- input vis ----
     vis = os.path.join(dir, f"all_tbin{tbin}s.ms.contsub.T2")  # 上でuvcontsubしたMS
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob{robust}.sgm_{nsigma}.H2O220-211.dv_{width.replace('km/s', '')}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob_{robust}.sgm_{nsigma}.H2O220-211.dv_{width.replace('km/s', '')}")
     os.system(f"rm -rf {imagename}*")
 
     # ---- maskはcontinuumで作ったもの(robust=0.0)で固定 ----
@@ -600,6 +635,18 @@ if thisstep in mysteps:
         dropdeg=True,
         overwrite=True
     )
+    exportfits(
+        imagename=imagename+".image",
+        fitsimage=imagename+".image.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    exportfits(
+        imagename=imagename+".pb",
+        fitsimage=imagename+".pb.fits",
+        dropdeg=True,
+        overwrite=True
+    )
     print("tclean of H2O(2_20-2_11) done")
 
 
@@ -609,7 +656,7 @@ if thisstep in mysteps:
 
     # ---- input vis ----
     vis = os.path.join(dir, f"all_tbin{tbin}s.ms.contsub.T2")  # 上でuvcontsubしたMS
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob{robust}.sgm_{nsigma}.HF1-0.dv_{width.replace('km/s', '')}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob_{robust}.sgm_{nsigma}.HF1-0.dv_{width.replace('km/s', '')}")
     os.system(f"rm -rf {imagename}*")
 
     # ---- maskはcontinuumで作ったもの(robust=0.0)で固定 ----
@@ -641,6 +688,18 @@ if thisstep in mysteps:
     exportfits(
         imagename=imagename+".image.pbcor",
         fitsimage=imagename+".image.pbcor.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    exportfits(
+        imagename=imagename+".image",
+        fitsimage=imagename+".image.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    exportfits(
+        imagename=imagename+".pb",
+        fitsimage=imagename+".pb.fits",
         dropdeg=True,
         overwrite=True
     )
@@ -655,12 +714,13 @@ if thisstep in mysteps:
     nsigma = 2.0  # noise threshold for tclean
     width = "50km/s"
 
-    # select channels
-    start_ch = 14  # 14:-300 km/s
-    end_ch   = 26  # 26:+300 km/s (250でも十分かもしれない)
+    # select channels (H2Oを基準に決めた)
+    start_ch = 15  # 15:-250 km/s
+    end_ch   = 25  # 25:+250 km/s
 
     # ---- CO(10-9) ----
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T1.rob{robust}.sgm_{nsigma}.CO10-9.dv_{width.replace('km/s', '')}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T1.rob_{robust}.sgm_{nsigma}.CO10-9.dv_{width.replace('km/s', '')}")
+    os.system(f"rm -rf {imagename}.image.mom0")
     os.system(f"rm -rf {imagename}.image.pbcor.mom0")
     
     immoments(
@@ -669,15 +729,29 @@ if thisstep in mysteps:
         chans=f"{start_ch}~{end_ch}",
         outfile=imagename+".image.pbcor.mom0",
     )
+    immoments(
+        imagename=imagename+".image",
+        moments=[0],
+        chans=f"{start_ch}~{end_ch}",
+        outfile=imagename+".image.mom0",
+    )
     exportfits(
         imagename=imagename+".image.pbcor.mom0",
         fitsimage=imagename+".image.pbcor.mom0.fits",
         dropdeg=True,
         overwrite=True
     )
+    exportfits(
+        imagename=imagename+".image.mom0",
+        fitsimage=imagename+".image.mom0.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    print("moment0 of CO(10-9) done")
 
     # ---- H2O(2_20-2_11) ----
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob{robust}.sgm_{nsigma}.H2O220-211.dv_{width.replace('km/s', '')}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob_{robust}.sgm_{nsigma}.H2O220-211.dv_{width.replace('km/s', '')}")
+    os.system(f"rm -rf {imagename}.image.mom0")
     os.system(f"rm -rf {imagename}.image.pbcor.mom0")
     
     immoments(
@@ -686,15 +760,29 @@ if thisstep in mysteps:
         chans=f"{start_ch}~{end_ch}",
         outfile=imagename+".image.pbcor.mom0",
     )
+    immoments(
+        imagename=imagename+".image",
+        moments=[0],
+        chans=f"{start_ch}~{end_ch}",
+        outfile=imagename+".image.mom0",
+    )
     exportfits(
         imagename=imagename+".image.pbcor.mom0",
         fitsimage=imagename+".image.pbcor.mom0.fits",
         dropdeg=True,
         overwrite=True
     )
+    exportfits(
+        imagename=imagename+".image.mom0",
+        fitsimage=imagename+".image.mom0.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    print("moment0 of H2O(2_20-2_11) done")
 
     # ---- HF(1-0) ----
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob{robust}.sgm_{nsigma}.HF1-0.dv_{width.replace('km/s', '')}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob_{robust}.sgm_{nsigma}.HF1-0.dv_{width.replace('km/s', '')}")
+    os.system(f"rm -rf {imagename}.image.mom0")
     os.system(f"rm -rf {imagename}.image.pbcor.mom0")
     
     immoments(
@@ -703,12 +791,25 @@ if thisstep in mysteps:
         chans=f"{start_ch}~{end_ch}",
         outfile=imagename+".image.pbcor.mom0",
     )
+    immoments(
+        imagename=imagename+".image",
+        moments=[0],
+        chans=f"{start_ch}~{end_ch}",
+        outfile=imagename+".image.mom0",
+    )
     exportfits(
         imagename=imagename+".image.pbcor.mom0",
         fitsimage=imagename+".image.pbcor.mom0.fits",
         dropdeg=True,
         overwrite=True
     )
+    exportfits(
+        imagename=imagename+".image.mom0",
+        fitsimage=imagename+".image.mom0.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    print("moment0 of HF(1-0) done")
 
 
 thisstep = 10
@@ -723,7 +824,7 @@ if thisstep in mysteps:
     width = "25MHz"  # width for tclean
 
     vis = os.path.join(dir, f"all_tbin{tbin}s.ms.contsub.T1") 
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T1.rob{robust}.sgm_{nsigma}.dv_{width}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T1.rob_{robust}.sgm_{nsigma}.dv_{width}")
     os.system(f"rm -rf {imagename}*")
 
     # ---- maskはcontinuumで作ったもの(robust=0.0)で固定 ----
@@ -759,7 +860,7 @@ if thisstep in mysteps:
 
     # Tune-2
     vis = os.path.join(dir, f"all_tbin{tbin}s.ms.contsub.T2") 
-    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob{robust}.sgm_{nsigma}.dv_{width}")
+    imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T2.rob_{robust}.sgm_{nsigma}.dv_{width}")
     os.system(f"rm -rf {imagename}*")
 
     tclean(
@@ -807,7 +908,7 @@ if thisstep in mysteps:
 
     # ---- input vis ----
     vis = "/home/tsujtaak/atsujita/HATLASJ0900/Tadaki-san/band8/HATLAS_J090045_B8.ms.contsub"
-    imagename = os.path.join(dir_image, f"OIII_rob{robust}.sgm_{nsigma}.dv_{width.replace('km/s', '')}")
+    imagename = os.path.join(dir_image, f"OIII_rob_{robust}.sgm_{nsigma}.dv_{width.replace('km/s', '')}")
     os.system(f"rm -rf {imagename}*")
 
     # ---- maskはcontinuumで作ったもの(robust=0.0)で固定 ----
@@ -844,6 +945,7 @@ if thisstep in mysteps:
         dropdeg=True,
         overwrite=True
     )
+    print("tclean of [OIII]88 done")
 
 
     # ------ [NII]205 -------
@@ -852,7 +954,7 @@ if thisstep in mysteps:
 
     # ---- input vis ----
     vis = "/home/tsujtaak/atsujita/HATLASJ0900/Tadaki-san/band5_qa2/HATLAS_J090045_B5_NII.ms.contsub"
-    imagename = os.path.join(dir_image, f"NII_rob{robust}.sgm_{nsigma}.dv_{width.replace('km/s', '')}")
+    imagename = os.path.join(dir_image, f"NII_rob_{robust}.sgm_{nsigma}.dv_{width.replace('km/s', '')}")
     os.system(f"rm -rf {imagename}*")
 
     tclean(
@@ -884,3 +986,80 @@ if thisstep in mysteps:
         dropdeg=True,
         overwrite=True
     )
+    print("tclean of [NII]205 done")
+
+
+thisstep = 12
+if thisstep in mysteps:
+
+    # select file
+    robust = 2.0  # robust parameter for tclean
+    nsigma = 2.0  # noise threshold for tclean
+    width = "50km/s"
+
+    # select channels (H2Oを基準に決めた)
+    start_ch = 15  # 15:-250 km/s
+    end_ch   = 25  # 25:+250 km/s
+    
+    # ---- [OIII]88 ----
+    imagename = os.path.join(dir_image, f"OIII_rob_{robust}.sgm_{nsigma}.dv_{width.replace('km/s', '')}")
+    os.system(f"rm -rf {imagename}.image.mom0")
+    os.system(f"rm -rf {imagename}.image.pbcor.mom0")
+    
+    immoments(
+        imagename=imagename+".image.pbcor",
+        moments=[0],
+        chans=f"{start_ch}~{end_ch}",
+        outfile=imagename+".image.pbcor.mom0",
+    )
+    immoments(
+        imagename=imagename+".image",
+        moments=[0],
+        chans=f"{start_ch}~{end_ch}",
+        outfile=imagename+".image.mom0",
+    )
+    exportfits(
+        imagename=imagename+".image.pbcor.mom0",
+        fitsimage=imagename+".image.pbcor.mom0.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    exportfits(
+        imagename=imagename+".image.mom0",
+        fitsimage=imagename+".image.mom0.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    print("moment0 of [OIII]88 done")
+
+
+    # ---- [NII]205 ----
+    imagename = os.path.join(dir_image, f"NII_rob_{robust}.sgm_{nsigma}.dv_{width.replace('km/s', '')}")
+    os.system(f"rm -rf {imagename}.image.mom0")
+    os.system(f"rm -rf {imagename}.image.pbcor.mom0")
+
+    immoments(
+        imagename=imagename+".image.pbcor",
+        moments=[0],
+        chans=f"{start_ch}~{end_ch}",
+        outfile=imagename+".image.pbcor.mom0",
+    )
+    immoments(
+        imagename=imagename+".image",
+        moments=[0],
+        chans=f"{start_ch}~{end_ch}",
+        outfile=imagename+".image.mom0",
+    )
+    exportfits(
+        imagename=imagename+".image.pbcor.mom0",
+        fitsimage=imagename+".image.pbcor.mom0.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    exportfits(
+        imagename=imagename+".image.mom0",
+        fitsimage=imagename+".image.mom0.fits",
+        dropdeg=True,
+        overwrite=True
+    )
+    print("moment0 of [NII]205 done")
