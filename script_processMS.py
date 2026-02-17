@@ -13,14 +13,14 @@ mysteps = [
     # 2,         # baseline statistics
     # 3,         # imaging for looking the spectrum
     # 4,         # uvcontsub
-    5,         # imaging continuum and making mask
+    # 5,         # imaging continuum and making mask
     # 6          # tclean for both continuum + line assuming to use imcontsub
     # 7,         # tclean for CO(10-9) / H2O(2_20-2_11) / HF(1-0)
-    # 8,         # create moment maps
+    8,         # create moment maps
     # 9,         # imcontsub
     # 10,        # tclean for continuum-subtracted spectrum
     # 11,        # tclean for [OIII]88 and [NII]205 (Tadaki-san)
-    # 12,        # create moment maps for [OIII]88 and [NII]205 (Tadaki-san)
+    12,        # create moment maps for [OIII]88 and [NII]205 (Tadaki-san)
 ]
 
 # common redshift
@@ -311,7 +311,7 @@ if thisstep in mysteps:
     robust = 0.0  # robust parameter for tclean
     cell = "0.15arcsec"  
     imsize = 400  # imsize for tclean
-    nsigma = 1.0  # noise threshold for tclean
+    nsigma = 2.0  # noise threshold for tclean
 
     # ---- mask param ----
     noisethreshold = 5.0     # default: 5.0
@@ -715,8 +715,8 @@ if thisstep in mysteps:
     width = "50km/s"
 
     # select channels (H2Oを基準に決めた)
-    start_ch = 15  # 15:-250 km/s
-    end_ch   = 25  # 25:+250 km/s
+    start_ch = 14  # 15:-250 km/s
+    end_ch   = 26  # 25:+250 km/s
 
     # ---- CO(10-9) ----
     imagename = os.path.join(dir_image, f"all_tbin{tbin}s.ms.contsub.T1.rob_{robust}.sgm_{nsigma}.CO10-9.dv_{width.replace('km/s', '')}")
@@ -998,8 +998,8 @@ if thisstep in mysteps:
     width = "50km/s"
 
     # select channels (H2Oを基準に決めた)
-    start_ch = 15  # 15:-250 km/s
-    end_ch   = 25  # 25:+250 km/s
+    start_ch = 14  # 15:-250 km/s
+    end_ch   = 26  # 25:+250 km/s
     
     # ---- [OIII]88 ----
     imagename = os.path.join(dir_image, f"OIII_rob_{robust}.sgm_{nsigma}.dv_{width.replace('km/s', '')}")
