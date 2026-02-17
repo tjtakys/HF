@@ -1,0 +1,14 @@
+Code for Tsujita et al. (2026)
+
+This repository contains the analysis code used in the study:
+
+Tsujita et al. (2026), arXiv:2602.12885
+https://arxiv.org/abs/2602.12885
+
+The scripts included here were used for data reduction, modeling, and figure generation presented in the paper.
+
+If you notice any issues, bugs, or have questions regarding the implementation, please contact:
+	•	tsujita __at__ ioa.s.u-tokyo.ac.jp
+	•	cc: kkohno __at__ ioa.s.u-tokyo.ac.jp
+
+We welcome feedback and suggestions.
