@@ -5,10 +5,21 @@ This repository contains the analysis code used in the study:
 Tsujita et al. (2026), arXiv:2602.12885
 https://arxiv.org/abs/2602.12885
 
-The scripts included here were used for data reduction, modeling, and figure generation presented in the paper.
+The scripts included here were used for data reduction and figure generation presented in the paper.
+
+Note on the chemical evolution model:
+Only the model results shown in the paper are included in this repository.
+The original chemical evolution modeling code based on:
+
+Kobayashi et al. (2020), ApJ, 900, 179
+https://ui.adsabs.harvard.edu/abs/2020ApJ...900..179K/abstract
+
+is not included in this repository.
+
 
 If you notice any issues, bugs, or have questions regarding the implementation, please contact:
 	•	tsujita __at__ ioa.s.u-tokyo.ac.jp
 	•	cc: kkohno __at__ ioa.s.u-tokyo.ac.jp
+    •	cc: c.kobayashi __at__ herts.ac.uk 
 
 We welcome feedback and suggestions.
