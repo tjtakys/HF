@@ -2,7 +2,7 @@ Code for Tsujita et al. (2026)
 
 This repository contains the analysis code used in the study:
 
-Tsujita et al. (2026), arXiv:2602.12885
+Tsujita et al. (2026), "Upper limit on HF(1-0) absorption in a dusty star-forming galaxy at z=6: Constraints on early fluorine enrichment", ApJL, in press,  arXiv:2602.12885
 https://arxiv.org/abs/2602.12885
 
 The scripts included here were used for data reduction and figure generation presented in the paper.
