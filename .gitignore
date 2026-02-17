@@ -1,4 +1,5 @@
-data/
+data/archive/
+data/calibrated/
 
 *.log
 
@@ -10,3 +11,5 @@ Temp*
 proposal/
 
 IMAGING_WEIGHT*
+
+*.code-workspace
