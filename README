@@ -5,6 +5,10 @@ This repository contains the analysis code used in the study:
 Tsujita et al. (2026), "Upper limit on HF(1-0) absorption in a dusty star-forming galaxy at z=6: Constraints on early fluorine enrichment", ApJL, 999, L14
 https://ui.adsabs.harvard.edu/abs/2026ApJ...999L..14T/abstract
 
+See also (press release):
+- Japanese: https://www.s.u-tokyo.ac.jp/ja/press/11077/
+- English:  https://www.s.u-tokyo.ac.jp/en/press/11077/
+
 The scripts included here were used for data reduction and figure generation presented in the paper.
 
 Note on the chemical evolution model:
